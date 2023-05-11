@@ -34,6 +34,7 @@ show_help() {
 	  5. Set environment variable RENDER_MODE=1 for displaying pipeline and overlay CV metadata
 	  6. Set environment variable LOW_POWER=1 for using GPU usage only based pipeline for Core platforms
 	  7. Set environment variable CPU_ONLY=1 for overriding inference to be performed on CPU only
+      8. Set environment variable OD_BATCH_SIZE=<INTEGER> for explicitly setting the batch-size for Core and discrete GPU object detection pipelines
         "
 }
 
