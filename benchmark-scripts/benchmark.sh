@@ -210,13 +210,13 @@ do
                 break
               fi
             done
-            LOW_POWER=$LOW_POWER ./docker-run.sh "$@"
+            OD_BATCH_SIZE=$OD_BATCH_SIZE LOW_POWER=$LOW_POWER ./docker-run.sh "$@"
           else
             echo "Error: NUM_GPU is 0, cannot run"
             exit 1
           fi
       else
-          CPU_ONLY=$CPU_ONLY LOW_POWER=$LOW_POWER ./docker-run.sh "$@"
+          OD_BATCH_SIZE=$OD_BATCH_SIZE CPU_ONLY=$CPU_ONLY LOW_POWER=$LOW_POWER ./docker-run.sh "$@"
       fi
       sleep 1
       #popd
@@ -239,7 +239,7 @@ do
       #pushd ..
       #echo "Cur dir: `pwd`"
       # Sync sleep in stream density script and platform metrics data collection script
-      CPU_ONLY=$CPU_ONLY LOW_POWER=$LOW_POWER COMPLETE_INIT_DURATION=$COMPLETE_INIT_DURATION STREAM_DENSITY_FPS=$STREAM_DENSITY_FPS STREAM_DENSITY_MODE=1 ./docker-run.sh "$@"
+      OD_BATCH_SIZE=$OD_BATCH_SIZE CPU_ONLY=$CPU_ONLY LOW_POWER=$LOW_POWER COMPLETE_INIT_DURATION=$COMPLETE_INIT_DURATION STREAM_DENSITY_FPS=$STREAM_DENSITY_FPS STREAM_DENSITY_MODE=1 ./docker-run.sh "$@"
       #popd
     fi
   done
