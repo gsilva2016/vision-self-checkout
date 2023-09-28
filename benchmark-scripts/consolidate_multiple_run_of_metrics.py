@@ -74,6 +74,7 @@ class CPUUsageExtractor(KPIExtractor):
 
 class GPUUsageExtractor(KPIExtractor):
     _USAGE_PATTERN = "Render/3D/0"
+    _USAGE_PATTERN = "[unknown/0]"
     #overriding abstract method
     def extract_data(self, log_file_path):
         print("parsing GPU usages")
@@ -93,6 +94,9 @@ class GPUUsageExtractor(KPIExtractor):
         for entry in data:
             #json data works for vdbox, but not for overall usage due to duplicate Render/3D/0 entries in the log file
             #eu_samples.append(entry["engines"]["Render/3D/0"]["busy"])
+            # "[unknown]/0
+            eu_samples.append(entry["engines"]["[unknown]/0"]["busy"])
+            #print("usage: {}".format(entry["engines"]["[unknown]/0"]["busy"]))
             #print("usage: {}".format(entry["engines"]["Render/3D/0"]["busy"]))
             vdbox0_samples.append(entry["engines"]["Video/0"]["busy"])
             try:
@@ -100,6 +104,11 @@ class GPUUsageExtractor(KPIExtractor):
             except KeyError:
                 pass
         
+        if len(eu_samples) > 0:
+            gpu_device_usage[device_usage_key] = mean(eu_samples)
+        else:
+            gpu_device_usage[device_usage_key] = 0.0
+
         if len(vdbox0_samples) > 0:
             gpu_device_usage[device_vdbox0_usage_key] = mean(vdbox0_samples)
             try:
@@ -125,11 +134,11 @@ class GPUUsageExtractor(KPIExtractor):
                        #print("usage percent {}".format(float(usage_percent)))
 
                        usage_samples.append(float(usage_percent))
-        if usage_samples: 
-          #print("avg gpu usage: {}".format(mean(usage_samples)))
-          gpu_device_usage[device_usage_key] = mean(usage_samples)
-        else:
-            gpu_device_usage[device_usage_key] = 0.0
+        #if usage_samples: 
+        #  #print("avg gpu usage: {}".format(mean(usage_samples)))
+        #  gpu_device_usage[device_usage_key] = mean(usage_samples)
+        #else:
+        #    gpu_device_usage[device_usage_key] = 0.0
 
 
         if gpu_device_usage:
@@ -357,6 +366,7 @@ class MemBandwidthExtractor(KPIExtractor):
 
 class PIPELINEFPSExtractor(KPIExtractor):
     _FPS_KEYWORD = "avg_fps"
+    _FPS_KEYWORD = "Throughput FPS"
 
     #overriding abstract method
     def extract_data(self, log_file_path):
@@ -381,6 +391,7 @@ class PIPELINEFPSExtractor(KPIExtractor):
 
 class FPSExtractor(KPIExtractor):
     _FPS_KEYWORD = "avg_fps"
+    _FPS_KEYWORD = "Throughput"
 
     #overriding abstract method
     def extract_data(self, log_file_path):
@@ -508,7 +519,7 @@ if __name__ == '__main__':
             for dirpath, dirname, filename in os.walk(log_directory_path):
                 for file in filename:
                     if re.search(kpiExtractor, file):
-                        #print("matched file: {}".format(file))
+                        print("matched file: {}".format(file))
                         fileFound = True
                         extractor = KPIExtractor_OPTION.get(kpiExtractor)()
                         kpi_dict = extractor.extract_data(os.path.join(log_directory_path, file))

@@ -34,6 +34,7 @@ then
 fi
 
 is_xeon=`lscpu | grep -i xeon | wc -l`
+echo "IS_XEON----------------> $is_xeon and PLATFORM=$PLATFORM"
 
 echo "Starting platform data collection"
 #if this is the first run, collect all the metrics
@@ -49,10 +50,10 @@ then
     echo "Starting xeon pcm-power collection"
     timeout "$DURATION" $PCM_DIRECTORY/pcm-power >& $LOG_DIRECTORY/power_usage.log &
   else
-    echo "Starting xeon pcm-power collection"
+    echo "Starting pcm-power collection"
     timeout "$DURATION" $PCM_DIRECTORY/pcm 1 -silent -nc -nsys -csv=$LOG_DIRECTORY/pcm.csv &
   fi
-      
+
   # DGPU pipeline and Flex GPU Metrics
   if [ "$PLATFORM" == "dgpu" ] && [ $HAS_ARC == 0 ] 
   then
@@ -90,7 +91,7 @@ then
     timeout $DURATION docker run -v $SOURCE_DIR/$LOG_DIRECTORY:/$LOG_DIRECTORY -e LOG_DIRECTORY=$LOG_DIRECTORY -itd --privileged benchmark:igt bash -c "/usr/local/bin/intel_gpu_top -d pci:card=1 -J > /$LOG_DIRECTORY/igt1.json"
 
   # CORE pipeline and iGPU/Arc GPU Metrics
-  elif [ "$PLATFORM" == "core" ]
+  elif [ "$PLATFORM" == "core" ] || [ "$PLATFORM" == "gpu" ]
   then
     if [ $HAS_ARC == 1 ]
     then

@@ -11,4 +11,4 @@
 
 source ./get-media-codec.sh $2
 echo "./$1 $2 $3 $4 $5 $is_avc"
-./$1 $2 $3 $4 $5 $is_avc
+./$1 $2 $3 $4 $5 $is_avc  > /tmp/results/pipeline$cid_count.log

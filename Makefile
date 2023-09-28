@@ -9,6 +9,7 @@ OVMS_CPP_DOCKER_IMAGE ?= openvino/model_server
 OVMS_CPP_IMAGE_TAG ?= latest
 BASE_OS ?= ubuntu
 DIST_OS ?= $(BASE_OS)
+PULL_OPENVINO ?= remote
 
 build-all: build-soc build-dgpu
 
@@ -19,6 +20,10 @@ build-soc:
 build-dgpu:
 	echo "Building for dgpu Arc/Flex HTTPS_PROXY=${HTTPS_PROXY} HTTP_PROXY=${HTTP_PROXY}"
 	docker build --no-cache --build-arg HTTPS_PROXY=${HTTPS_PROXY} --build-arg HTTP_PROXY=${HTTP_PROXY} -t sco-dgpu:2.0 -f Dockerfile.dgpu .
+
+build-dlstreamer-source:
+	echo "Building OpenVINO from source for DLStreamer image PULL_OPENVINO=${PULL_OPENVINO} HTTPS_PROXY=${HTTPS_PROXY} HTTP_PROXY=${HTTP_PROXY}"
+	docker build --progress=plain --build-arg pull_openvino=${PULL_OPENVINO} --build-arg HTTPS_PROXY=${HTTPS_PROXY} --build-arg HTTP_PROXY=${HTTP_PROXY} -t sco-dlstreamer:3.0 -f Dockerfile.dlstreamer.2023.1.0 .
 
 run-camera-simulator:
 	./camera-simulator/camera-simulator.sh
@@ -65,7 +70,7 @@ build-ovms-server-22.04:
 	@echo "Building for OVMS Server Ubuntu 22.04 (Recommended) HTTPS_PROXY=${HTTPS_PROXY} HTTP_PROXY=${HTTP_PROXY}"
 	# Pull docker images for grpc/kserv distributed architecture
 	# Ubuntu 22.04 support with CPU/iGPU/dGPU 
-	docker pull openvino/model_server:2023.0-gpu
+	docker pull openvino/model_server:2023.1-gpu
 
 build-ovms-server-20.04:
 	@echo "Building for OVMS Server Ubuntu 20.04 HTTPS_PROXY=${HTTPS_PROXY} HTTP_PROXY=${HTTP_PROXY}"

@@ -152,6 +152,7 @@ if [ -z $1 ]
 then
         show_help
 fi
+
 get_options "$@"
 
 # load docker-run params
@@ -160,7 +161,9 @@ shift $OPTIONS_TO_SKIP
 # shellcheck disable=SC2068
 set -- $@ $DOCKER_RUN_ARGS
 echo "arguments passing to get-optons.sh" "$@"
-source ../get-options.sh "$@"
+
+# Let docker-run decide which get-options*.sh to run 
+#source ../get-options.sh "$@"
 
 # set performance mode
 echo "Setting scaling_governor to perf mode"
@@ -185,17 +188,19 @@ else
         run_index=1
 fi
 
+echo "INPUTSRC $INPUTSRC"
 distributed=0
 echo "RunIndex $run_index"
 for test_run in $( seq 0 $(($run_index - 1)) )
 do
   echo "Entered loop" 
   # Start camera-simulator if rtsp is requested
-  if grep -q "rtsp" <<< "$INPUTSRC"; then
+  # Below doesn't work because get-options hasn't been called until after docker-run is called
+  #if grep -q "rtsp" <<< "$INPUTSRC"; then
     echo "Starting RTSP stream"
     ./camera-simulator.sh
     sleep 5
-  fi
+  #fi
   echo "Starting workload(s)"
   
 
@@ -245,8 +250,9 @@ do
             echo "Error: NUM_GPU is 0, cannot run"
             exit 1
           fi
-      else
-          CPU_ONLY=$CPU_ONLY LOW_POWER=$LOW_POWER ./docker-run.sh "$@"
+      else	  
+          CPU_ONLY=$CPU_ONLY LOW_POWER=$LOW_POWER source ./docker-run.sh "$@"
+	  echo "Called docker-run.... checking | $WORKLOAD_SCRIPT $PLATFORM $INPUTSRC"
       fi
       sleep 1
       #popd
@@ -290,8 +296,10 @@ do
 
   if [ $test_run -eq 0 ]
   then
+    echo "-----------Calling collect platorm metrics $test_run PLATFORM=$PLATFORM-------------"
     docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -e test_run=$test_run -e LOG_DIRECTORY=$LOG_DIRECTORY -e SOURCE_DIR=$SOURCE_DIR -v $SOURCE_DIR/results:/tmp/results -v $SOURCE_DIR/$LOG_DIRECTORY:/$LOG_DIRECTORY --net=host --privileged benchmark:dev bash -c "./collect_platform_metrics.sh $DURATION $LOG_DIRECTORY $PLATFORM"
   else
+    echo "-------------Calling other collect platform metrics--------"
     docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -e test_run=$test_run -e LOG_DIRECTORY=$LOG_DIRECTORY -e SOURCE_DIR=$SOURCE_DIR -v $SOURCE_DIR/results:/tmp/results -v $SOURCE_DIR/$LOG_DIRECTORY:/$LOG_DIRECTORY --net=host --privileged benchmark:dev bash -c "./collect_platform_metrics.sh $DURATION $LOG_DIRECTORY $PLATFORM --xeon-memory-only"
   fi
 
@@ -309,10 +317,10 @@ do
         then
           # if we don't find any docker container running for dlstreamer (i.e. name with automated-self-checkout)
           # then it is ovms running case
-          echo "running ovms client case..."
+          echo "-------------running ovms client case..."
           ovmsCase=1
         else
-          echo "running dlstreamer case..."
+          echo "------------running dlstreamer case..."
         fi
 
         # keep looping through until stream density script is done

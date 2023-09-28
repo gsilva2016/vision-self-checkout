@@ -5,14 +5,14 @@
 #
 
 # -----------------------------------------------------------
-ARG BASE_IMAGE=openvino/model_server:2023.0-gpu
+ARG BASE_IMAGE=openvino/model_server:2023.1-gpu
 FROM $BASE_IMAGE as release
 ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 WORKDIR /
 
 # Install dependencies for compiling ocv4.7.0
-ARG BUILD_DEPENDENCIES="cmake build-essential git-gui python3 python3-pip flex bison clang libgtk2.0-dev libhdf5-serial-dev libvtk9-dev libtbb2 libxml2 curl libpugixml1v5"
+ARG BUILD_DEPENDENCIES="cmake build-essential git-gui python3 python3-pip flex bison clang libgtk2.0-dev libhdf5-serial-dev libvtk9-dev libtbb2 libxml2 curl libpugixml1v5 jq"
 
 RUN apt -y update && \
     apt install -y ${BUILD_DEPENDENCIES} && \
@@ -69,6 +69,10 @@ cmake \
 make "-j10" && \
 make install
 
+# Install latest drivers for MTL GPU Compute
+RUN mkdir neo; cd neo; wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.14828.8/intel-igc-core_1.0.14828.8_amd64.deb; wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.14828.8/intel-igc-opencl_1.0.14828.8_amd64.deb; wget https://github.com/intel/compute-runtime/releases/download/23.30.26918.9/intel-level-zero-gpu-dbgsym_1.3.26918.9_amd64.ddeb; wget https://github.com/intel/compute-runtime/releases/download/23.30.26918.9/intel-level-zero-gpu_1.3.26918.9_amd64.deb; wget https://github.com/intel/compute-runtime/releases/download/23.30.26918.9/intel-opencl-icd-dbgsym_23.30.26918.9_amd64.ddeb; wget https://github.com/intel/compute-runtime/releases/download/23.30.26918.9/intel-opencl-icd_23.30.26918.9_amd64.deb; wget https://github.com/intel/compute-runtime/releases/download/23.30.26918.9/libigdgmm12_22.3.0_amd64.deb; dpkg -i *.deb
+
+
 # COPY OVMS runtime
 COPY ovms.tar.gz /
 RUN tar -xf ovms.tar.gz
@@ -78,8 +82,6 @@ RUN rm /ovms/lib/*opencv*;
 
 # Copy C-API sources
 #RUN mv model_repo configs
-RUN DEBIAN_FRONTEND=noninteractive apt install -y jq -y && \
-    rm -rf /var/lib/apt/lists/* && rm -rf /tmp/*
 
 ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:/usr/local/lib/x86_64-linux-gnu/:/usr/local/lib:/ovms/lib:$LD_LIBRARY_PATH
 COPY configs/gst-ovms /home/intel/gst-ovms

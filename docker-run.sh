@@ -15,4 +15,4 @@ if [ -z $WORKLOAD_SCRIPT ]; then
 fi
 
 echo "running $WORKLOAD_SCRIPT"
-./$WORKLOAD_SCRIPT "$@"
+source ./$WORKLOAD_SCRIPT "$@"
