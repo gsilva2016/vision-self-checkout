@@ -80,10 +80,10 @@ intel-opencl-icd intel-level-zero-gpu level-zero intel-media-va-driver-non-free 
 
 
 # COPY OVMS runtime
-COPY ovms.tar.gz /
-RUN tar -xf ovms.tar.gz
-#RUN find / -name *ovms*.so
+COPY ovms.tar.gz /tmp/ovms.tar.gz
+RUN tar -xf /tmp/ovms.tar.gz -C /
 RUN rm /ovms/lib/*opencv*;
+#RUN find / -name *ovms*.so; sleep 10
 
 # Copy C-API sources
 ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/:/usr/local/lib/x86_64-linux-gnu/:/usr/local/lib:/ovms/lib:$LD_LIBRARY_PATH

@@ -32,12 +32,12 @@ clean-simulator:
 build-ovms-realsense-client: build-ovms-server-22.04
 	echo "Building RealSense OVMS C-API Client HTTPS_PROXY=${HTTPS_PROXY} HTTP_PROXY=${HTTP_PROXY}"
 	rm -vrf ovms.tar.gz 
-	wget -O ovms.tar.gz https://github.com/openvinotoolkit/model_server/releases/download/v2023.0/ovms_ubuntu22.tar.gz
+	wget -O ovms.tar.gz https://github.com/openvinotoolkit/model_server/releases/download/v2023.1/ovms_ubuntu22.tar.gz 
 	# # Build CAPI docker image
 	docker build $(NO_CACHE_OPTION) -f Dockerfile.ovms-capi-realsense . \
-		--build-arg http_proxy=$(HTTP_PROXY) \
+		--build-arg http_proxy="$(HTTP_PROXY)" \
 		--build-arg https_proxy="$(HTTPS_PROXY)" \
-		--build-arg no_proxy=$(NO_PROXY) \
+		--build-arg no_proxy="$(NO_PROXY)" \
 		--build-arg BASE_IMAGE=ubuntu:22.04 \
 		--progress=plain \
 		-t $(OVMS_CPP_DOCKER_IMAGE)-capi-realsense:$(OVMS_CPP_IMAGE_TAG)
@@ -45,14 +45,14 @@ build-ovms-realsense-client: build-ovms-server-22.04
 build-ovms-gst-client: build-ovms-server-22.04
 	echo "Building GStreamer OVMS C-API Client HTTPS_PROXY=${HTTPS_PROXY} HTTP_PROXY=${HTTP_PROXY}"
 	# Build C-API for optimized distributed architecture. Includes GST for HWA media	
-	rm -vrf ovms.tar.gz 
-	wget -O ovms.tar.gz https://github.com/openvinotoolkit/model_server/releases/download/v2023.0/ovms_ubuntu22.tar.gz
+	rm -vrf ovms.tar.gz
+	wget -O ovms.tar.gz https://github.com/openvinotoolkit/model_server/releases/download/v2023.1/ovms_ubuntu22.tar.gz 
 
 	# # Build CAPI docker image
 	docker build $(NO_CACHE_OPTION) -f Dockerfile.ovms-capi-gst . \
-		--build-arg http_proxy=$(HTTP_PROXY) \
+		--build-arg http_proxy="$(HTTP_PROXY)" \
 		--build-arg https_proxy="$(HTTPS_PROXY)" \
-		--build-arg no_proxy=$(NO_PROXY) \
+		--build-arg no_proxy="$(NO_PROXY)" \
 		--build-arg BASE_IMAGE=ubuntu:22.04 \
 		--progress=plain \
 		-t $(OVMS_CPP_DOCKER_IMAGE)-capi-gst:$(OVMS_CPP_IMAGE_TAG)
@@ -65,7 +65,7 @@ build-ovms-server-22.04:
 	@echo "Building for OVMS Server Ubuntu 22.04 (Recommended) HTTPS_PROXY=${HTTPS_PROXY} HTTP_PROXY=${HTTP_PROXY}"
 	# Pull docker images for grpc/kserv distributed architecture
 	# Ubuntu 22.04 support with CPU/iGPU/dGPU 
-	docker pull openvino/model_server:2023.0-gpu
+	docker pull openvino/model_server:2023.1-gpu
 
 build-ovms-server-20.04:
 	@echo "Building for OVMS Server Ubuntu 20.04 HTTPS_PROXY=${HTTPS_PROXY} HTTP_PROXY=${HTTP_PROXY}"
