@@ -15,7 +15,7 @@
 #
 
 CV_LIBS = -L/usr/lib/x86_64-linux-gnu/ -L/usr/local/lib/x86_64-linux-gnu/ -L/ovms/lib/
-CV_INCLUDES = -I/usr/lib/include/opencv4
+CV_INCLUDES = -I/usr/include/opencv4 -I/usr/include/gstreamer-1.0
 CUSTOM_NODE_FLAGS = -fpic -O2 -U_FORTIFY_SOURCE -fstack-protector -fno-omit-frame-pointer -D_FORTIFY_SOURCE=1 -fno-strict-overflow -Wall -Wno-unknown-pragmas -Wno-error=sign-compare -fno-delete-null-pointer-checks -fwrapv -fstack-clash-protection  -Wformat -Wformat-security
 
 build:
