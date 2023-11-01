@@ -4,13 +4,12 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-#FROM intel/dlstreamer:2022.2.0-ubuntu20-gpu815 as base
-FROM intel/dlstreamer:2022.3.0-ubuntu22-gpu555
+ARG BASE_IMAGE=intel/dlstreamer:2023.0.0-ubuntu22-gpu682-dpcpp
 
-USER root
-
-RUN if [ -n "$HTTP_PROXY" ] ; then  echo "Acquire::http::Proxy \"$HTTP_PROXY\";" >  /etc/apt/apt.conf; fi
-RUN apt-get update -y || true; DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+# Realsense + GStreamer Realsense builds
+FROM $BASE_IMAGE as realsense
+ONBUILD RUN if [ -n "$HTTP_PROXY" ] ; then  echo "Acquire::http::Proxy \"$HTTP_PROXY\";" >  /etc/apt/apt.conf; fi
+ONBUILD RUN apt-get update -y || true; DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     build-essential \
     autoconf \
     git \
@@ -23,26 +22,24 @@ RUN apt-get update -y || true; DEBIAN_FRONTEND=noninteractive apt-get install -y
     libgl1-mesa-dev \
     libglu1-mesa-dev \
     nasm \
-    ninja-build \
     cmake  \
     python3  \
-    python3-pip  \
-    meson && \
+    python3-pi \
+    meson &&  \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install realsense
-RUN mkdir -p /rs
-WORKDIR /rs
-RUN git clone https://github.com/gwen2018/librealsense.git
-WORKDIR /rs/librealsense
-RUN git checkout stream_d436_b
-COPY ./patch/libusb.h /rs/librealsense/src/libusb/libusb.h
+ONBUILD RUN mkdir -p /rs
+ONBUILD WORKDIR /rs
+ONBUILD RUN git clone https://github.com/gwen2018/librealsense.git
+ONBUILD WORKDIR /rs/librealsense
+ONBUILD RUN git checkout stream_d436_b
+ONBUILD COPY ./patch/libusb.h /rs/librealsense/src/libusb/libusb.h
      #./scripts/setup_udev_rules.sh && \
-RUN mkdir build
-WORKDIR /rs/librealsense/build
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN cmake ../ \
+ONBUILD RUN mkdir build
+ONBUILD WORKDIR /rs/librealsense/build
+ONBUILD SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ONBUILD RUN cmake ../ \
         -DBUILD_SHARED_LIBS=true \
         -DBUILD_WITH_JPEGTURBO=true \
         -DBUILD_PYTHON_BINDINGS:bool=true \
@@ -58,19 +55,30 @@ RUN cmake ../ \
     make install && \
     export PYTHONPATH="$PYTHONPATH":/usr/lib/python3/dist-packages/pyrealsense2 && \
     python3 -c "import pyrealsense2 as rs; print(rs)"
-RUN mv /rs/librealsense/build/libjpeg-turbo/lib/libturbojpeg.so* /usr/local/lib
+
+ONBUILD RUN mv /rs/librealsense/build/libjpeg-turbo/lib/libturbojpeg.so* /usr/local/lib
+
 # Build gst realsense element. Use github version once pull request is accepted with bug fixes
-WORKDIR /rs
-RUN git clone https://github.com/brian-intel/realsense-gstreamer
-WORKDIR /rs/realsense-gstreamer
-RUN /usr/bin/meson . build && ninja -C build && \
+ONBUILD WORKDIR /rs
+ONBUILD RUN git clone https://github.com/brian-intel/realsense-gstreamer
+ONBUILD WORKDIR /rs/realsense-gstreamer
+ONBUILD RUN /usr/bin/meson . build && ninja -C build && \
     cp /rs/realsense-gstreamer/build/src/libgstrealsense_meta.so /opt/intel/dlstreamer/gstreamer/lib/ && \
     cp /rs/realsense-gstreamer/build/src/libgstrealsensesrc.so /opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0 && \
     cp /usr/local/lib/libturbojpeg.so* /opt/intel/dlstreamer/gstreamer/lib/
-#RUN gst-inspect-1.0 realsensesrc
 
+# Final build artifact
+FROM $BASE_IMAGE as final
 
-#FROM base as build-default
+USER root
+
+RUN if [ -n "$HTTP_PROXY" ] ; then  echo "Acquire::http::Proxy \"$HTTP_PROXY\";" >  /etc/apt/apt.conf; fi
+RUN apt-get update -y || true; DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    python3  \
+    python3-pip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY ./requirements.txt /requirements.txt
 RUN pip3 install --upgrade pip --no-cache-dir -r /requirements.txt
 WORKDIR /

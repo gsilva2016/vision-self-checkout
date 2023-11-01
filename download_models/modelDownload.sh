@@ -130,7 +130,8 @@ mv $textRec0014/1/$textRec0012GPU.json $textRec0014/1/$textRec0012.json
 # Yolov5s
 getModelFiles $yolov5s $pipelineZooModel"yolov5s-416" $modelPrecisionFP16
 getModelFiles $yolov5s $pipelineZooModel"yolov5s-416" $modelPrecisionFP32
-getProcessFile $yolov5s $pipelineZooModel"yolov5s-416" $yolov5s
+getProcessFile $yolov5s $pipelineZooModel"yolov5s-416" yolo-v5
+mv $yolov5s/1/yolo-v5.json $yolov5s/1/yolov5s.json
 
 # Yolov5s INT8
 getModelFiles $yolov5s $pipelineZooModel"yolov5s-416_INT8" $modelPrecisionFP16INT8

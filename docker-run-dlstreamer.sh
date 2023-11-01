@@ -39,7 +39,7 @@ then
 		echo "SOC (CPU, iGPU, and Xeon SP) device driver stack"
 	fi
 
-	if [ $HAS_ARC == 1 ]; then
+	if [ $PLATFORM == "dgpu" ] && [ $HAS_ARC == 1 ]; then
 		PLATFORM="arc"
 	fi
 
@@ -66,7 +66,7 @@ if grep -q "rtsp" <<< "$INPUTSRC"; then
 	# todo pass depay info
 	inputsrc=$INPUTSRC" ! rtph264depay "
 	INPUTSRC_TYPE="RTSP"
-	pre_process="pre-process-backend=vaapi-surface-sharing -e pre-process-config=VAAPI_FAST_SCALE_LOAD_FACTOR=1"
+	pre_process="pre-process-backend=vaapi-surface-sharing pre-process-config=VAAPI_FAST_SCALE_LOAD_FACTOR=1"
 
 
 elif grep -q "file" <<< "$INPUTSRC"; then
@@ -77,7 +77,7 @@ elif grep -q "file" <<< "$INPUTSRC"; then
 	inputsrc="filesrc location=vids/"${arrfilesrc[1]}" ! qtdemux ! h264parse "
 	INPUTSRC_TYPE="FILE"
 	decode_type="vaapidecodebin"
-	pre_process="pre-process-backend=vaapi-surface-sharing -e pre-process-config=VAAPI_FAST_SCALE_LOAD_FACTOR=1"
+	pre_process="pre-process-backend=vaapi-surface-sharing pre-process-config=VAAPI_FAST_SCALE_LOAD_FACTOR=1"
 
 elif grep -q "video" <<< "$INPUTSRC"; then
 	# v4l2src /dev/video*
@@ -132,7 +132,12 @@ then
 	RUN_MODE="-it"
 fi
 
-bash_cmd="/home/pipeline-server/framework-pipelines/$PLATFORM/$pipeline"
+if [ -z "$bash_cmd" ]
+then
+	bash_cmd="/home/pipeline-server/framework-pipelines/$PLATFORM/$pipeline"
+fi
+
+echo $bash_cmd
 if [ "$STREAM_DENSITY_MODE" == 1 ]; then
 	echo "Starting Stream Density"
 	bash_cmd="./stream_density_framework-pipelines.sh framework-pipelines/$PLATFORM/$pipeline"
@@ -156,4 +161,4 @@ fi
 # make sure models are downloaded or existing:
 ./download_models/getModels.sh --workload dlstreamer
 
-docker run --network host $cameras $TARGET_USB_DEVICE $TARGET_GPU_DEVICE --user root --ipc=host --name automated-self-checkout$cid_count -e RENDER_MODE=$RENDER_MODE $stream_density_mount -e INPUTSRC_TYPE=$INPUTSRC_TYPE -e DISPLAY=$DISPLAY -e cl_cache_dir=/home/pipeline-server/.cl-cache -v $cl_cache_dir:/home/pipeline-server/.cl-cache -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`/sample-media/:/home/pipeline-server/vids -v `pwd`/configs/dlstreamer/pipelines:/home/pipeline-server/pipelines -v `pwd`/configs/dlstreamer/extensions:/home/pipeline-server/extensions -v `pwd`/results:/tmp/results -v `pwd`/configs/dlstreamer/models/2022:/home/pipeline-server/models -v `pwd`/configs/dlstreamer/framework-pipelines:/home/pipeline-server/framework-pipelines -w /home/pipeline-server -e BARCODE_RECLASSIFY_INTERVAL=$BARCODE_INTERVAL -e OCR_RECLASSIFY_INTERVAL=$OCR_INTERVAL -e OCR_DEVICE=$OCR_DEVICE -e LOG_LEVEL=$LOG_LEVEL -e GST_DEBUG=$GST_DEBUG -e decode_type="$decode_type" -e pre_process="$pre_process" -e LOW_POWER="$LOW_POWER" -e cid_count=$cid_count -e inputsrc="$inputsrc" $RUN_MODE $stream_density_params -e CPU_ONLY="$CPU_ONLY" -e AUTO_SCALE_FLEX_140="$AUTO_SCALE_FLEX_140" $TAG bash -c "bash $bash_cmd"
+docker run --network host $cameras $TARGET_USB_DEVICE $TARGET_GPU_DEVICE --user root --ipc=host --name automated-self-checkout$cid_count -e RENDER_MODE=$RENDER_MODE $stream_density_mount -e INPUTSRC_TYPE=$INPUTSRC_TYPE -e DISPLAY=$DISPLAY -e cl_cache_dir=/home/pipeline-server/.cl-cache -v $cl_cache_dir:/home/pipeline-server/.cl-cache -v /tmp/.X11-unix:/tmp/.X11-unix -v `pwd`/sample-media/:/home/pipeline-server/vids -v `pwd`/configs/dlstreamer/pipelines:/home/pipeline-server/pipelines -v `pwd`/configs/dlstreamer/extensions:/home/pipeline-server/extensions -v `pwd`/results:/tmp/results -v `pwd`/configs/dlstreamer/models/2022:/home/pipeline-server/models -v `pwd`/configs/dlstreamer/framework-pipelines:/home/pipeline-server/framework-pipelines -w /home/pipeline-server -e BARCODE_RECLASSIFY_INTERVAL=$BARCODE_INTERVAL -e OCR_RECLASSIFY_INTERVAL=$OCR_INTERVAL -e OCR_DEVICE=$OCR_DEVICE -e LOG_LEVEL=$LOG_LEVEL -e GST_DEBUG=$GST_DEBUG -e decode_type="$decode_type" -e pre_process="$pre_process" -e LOW_POWER="$LOW_POWER" -e cid_count=$cid_count -e inputsrc="$inputsrc" $RUN_MODE $stream_density_params -e CPU_ONLY="$CPU_ONLY" -e AUTO_SCALE_FLEX_140="$AUTO_SCALE_FLEX_140" $TAG bash -c "$bash_cmd"
