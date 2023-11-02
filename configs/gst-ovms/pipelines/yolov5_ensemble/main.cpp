@@ -129,10 +129,11 @@ public:
                     "video/x-raw, width=" + std::to_string(video_width) +
                     ", height=" + std::to_string(video_height) + " ! videoconvert ! video/x-raw,format=BGR ! queue ! appsink drop=1 sync=0";
                 else
-                    return "rtspsrc location=" + mediaLocation + " ! rtph264depay ! vaapidecodebin ! video/x-raw(memory:VASurface),format=NV12 ! vaapipostproc" +
-                    " width=" + std::to_string(video_width) +
-                    " height=" + std::to_string(video_height) +
-                    " scale-method=fast ! videoconvert ! video/x-raw,format=BGR ! queue ! appsink drop=1 sync=0";
+                    return "rtspsrc location=" + mediaLocation + " ! rtph264depay ! h264parse ! vah264dec ! video/x-raw(memory:VAMemory),format=NV12 " +
+                    " ! vapostproc ! " +
+                    " video/x-raw, width=" + std::to_string(video_width) +
+                    ", height=" + std::to_string(video_height) +
+                    "  ! videoconvert ! video/x-raw,format=BGR ! queue ! appsink drop=1 sync=0";
                 case H265:
                 if (use_onevpl)
                     return "rtspsrc location=" + mediaLocation + " ! rtph265depay ! h265parse ! " +
@@ -141,10 +142,11 @@ public:
                     "video/x-raw, width=" + std::to_string(video_width) +
                     ", height=" + std::to_string(video_height) + " ! videoconvert ! video/x-raw,format=BGR ! queue ! appsink drop=1 sync=0";
                 else
-                    return "rtspsrc location=" + mediaLocation + " ! rtph265depay ! vaapidecodebin ! vaapipostproc" +
-                    " width=" + std::to_string(video_width) +
-                    " height=" + std::to_string(video_height) +
-                    " scale-method=fast ! videoconvert ! video/x-raw,format=BGR ! appsink sync=0 drop=1";
+                    return "rtspsrc location=" + mediaLocation + " ! rtph265depay ! h265parse ! vah265dec ! video/x-raw(memory:VAMemory),format=NV12 " +
+                    " ! vapostproc ! " +
+                    " video/x-raw, width=" + std::to_string(video_width) +
+                    ", height=" + std::to_string(video_height) +
+                    "  ! videoconvert ! video/x-raw,format=BGR ! queue ! appsink drop=1 sync=0";                    
                 default:
                     std::cout << "Video type not supported!" << std::endl;
                     return "";
@@ -1603,8 +1605,8 @@ bool createModelServer()
         uint32_t code = 0;
         const char* details = nullptr;
 
-        OVMS_StatusGetCode(res, &code);
-        OVMS_StatusGetDetails(res, &details);
+        OVMS_StatusCode(res, &code);
+        OVMS_StatusDetails(res, &details);
         std::cerr << "ERROR: during start: code:" << code << "; details:" << details
                   << "; grpc_port: " << _server_grpc_port
                   << "; http_port: " << _server_http_port
@@ -1923,8 +1925,8 @@ void run_stream(std::string mediaPath, GstElement* pipeline, GstElement* appsink
                 //std::cout << "OVMS_Inference failed " << std::endl;
                 uint32_t code = 0;
                 const char* details = 0;
-                OVMS_StatusGetCode(res, &code);
-                OVMS_StatusGetDetails(res, &details);                
+                OVMS_StatusCode(res, &code);
+                OVMS_StatusDetails(res, &details);                
 
                 OVMS_StatusDelete(res);
                 if (request)
@@ -1951,11 +1953,11 @@ void run_stream(std::string mediaPath, GstElement* pipeline, GstElement* appsink
         } // end lock on inference request to server        
 
         metricStartTime = std::chrono::high_resolution_clock::now();
-        OVMS_InferenceResponseGetOutputCount(response, &outputCount);
+        OVMS_InferenceResponseOutputCount(response, &outputCount);
         outputId = 0;
 
         // confidence_levels        
-        OVMS_InferenceResponseGetOutput(response, outputId, &outputName1, &datatype1, &shape1, &dimCount1, &voutputData1, &bytesize1, &bufferType1, &deviceId1);
+        OVMS_InferenceResponseOutput(response, outputId, &outputName1, &datatype1, &shape1, &dimCount1, &voutputData1, &bytesize1, &bufferType1, &deviceId1);
         // std::cout << "------------>" << tid << " : " << "DeviceID " << deviceId1
         //  << ", OutputName " << outputName1
         //  << ", DimCount " << dimCount1
@@ -1965,7 +1967,7 @@ void run_stream(std::string mediaPath, GstElement* pipeline, GstElement* appsink
 
         // roi_coordinates
         outputId = 1;
-        OVMS_InferenceResponseGetOutput(response, outputId, &outputName2, &datatype2, &shape2, &dimCount2, &voutputData2, &bytesize2, &bufferType2, &deviceId2);
+        OVMS_InferenceResponseOutput(response, outputId, &outputName2, &datatype2, &shape2, &dimCount2, &voutputData2, &bytesize2, &bufferType2, &deviceId2);
         // std::cout << "------------>" << tid << " : " << "DeviceID " << deviceId1
         //  << ", OutputName " << outputName2
         //  << ", DimCount " << dimCount2
@@ -1975,7 +1977,7 @@ void run_stream(std::string mediaPath, GstElement* pipeline, GstElement* appsink
 
         // classify_output e.g. Classification results
         outputId = 2;
-        OVMS_InferenceResponseGetOutput(response, outputId, &outputName3, &datatype3, &shape3, &dimCount3, &voutputData3, &bytesize3, &bufferType3, &deviceId3);
+        OVMS_InferenceResponseOutput(response, outputId, &outputName3, &datatype3, &shape3, &dimCount3, &voutputData3, &bytesize3, &bufferType3, &deviceId3);
         // std::cout << "------------>" << tid << " : " << "DeviceID " << deviceId1
         //  << ", OutputName " << outputName3
         //  << ", DimCount " << dimCount3

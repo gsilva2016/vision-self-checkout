@@ -285,7 +285,10 @@ if grep -q "file" <<< "$INPUTSRC"; then
 fi
 
 # cmdlineargs: inputsrc 0-libva|1-onevpl 0-norender|1-render
-bash_cmd="./launch-pipeline.sh $PIPELINE_EXEC_PATH $INPUTSRC $USE_ONEVPL $RENDER_MODE $RENDER_PORTRAIT_MODE"
+if [ -z "$bash_cmd" ]
+then
+	bash_cmd="./launch-pipeline.sh $PIPELINE_EXEC_PATH $INPUTSRC $USE_ONEVPL $RENDER_MODE $RENDER_PORTRAIT_MODE"
+fi
 
 if [ "$STREAM_DENSITY_MODE" == 1 ]; then
 	echo "Starting Stream Density"

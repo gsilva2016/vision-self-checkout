@@ -53,9 +53,14 @@ while :; do
                 else
                     TARGET_GPU_ID=$((128+$TARGET_GPU_NUMBER))
                     TARGET_GPU="GPU."$TARGET_GPU_NUMBER
-                    #TARGET_GPU_DEVICE="--device=/dev/dri/renderD"$TARGET_GPU_ID
+                    
                     #TARGET_GPU_DEVICE_NAME="/dev/dri/renderD"$TARGET_GPU_ID
-                    TARGET_GPU_DEVICE="--privileged"
+                    if [ "$TARGET_GPU_NUMBER" == "0" ]
+                    then
+                        TARGET_GPU_DEVICE="--device=/dev/dri/renderD"$TARGET_GPU_ID
+                    else
+                        TARGET_GPU_DEVICE="--privileged"
+                    fi
                 fi
                 shift
             else
