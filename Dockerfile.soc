@@ -81,7 +81,6 @@ RUN apt-get update -y || true; DEBIAN_FRONTEND=noninteractive apt-get install -y
 
 COPY ./requirements.txt /requirements.txt
 COPY ./sample-media/ /home/pipeline-server/vids
-COPY ./configs/dlstreamer/pipelines /home/pipeline-server/pipelines
 COPY ./configs/dlstreamer/extensions /home/pipeline-server/extensions
 COPY ./configs/dlstreamer/models/2022 /home/pipeline-server/models 
 COPY ./configs/dlstreamer/framework-pipelines /home/pipeline-server/framework-pipelines
