@@ -5,6 +5,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+if [ "1" == "$DOWNLOAD_SAMPLE_DEMO" ]
+then
+	wget -O ./vids/demo_video.mp4 https://www.pexels.com/video/4465029/download/
+	gst-launch-1.0  $inputsrc ! vaapih264dec ! vaapipostproc width=1920 height=2160 ! videorate ! 'video/x-raw, framerate=25/1' ! vaapih264enc ! h264parse ! mp4mux ! filesink location=./vids/demo_video2.mp4
+	sleep 1
+	mv ./vids/demo_video2.mp4 ./vids/demo_video.mp4
+fi
+
 if [ "$INPUTSRC_TYPE" == "REALSENSE" ]; then
         decode_pp="! videoconvert ! video/x-raw,format=BGR"
 	# TODO: update with vaapipostproc when MJPEG codec is supported.

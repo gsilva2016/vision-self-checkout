@@ -80,5 +80,26 @@ RUN apt-get update -y || true; DEBIAN_FRONTEND=noninteractive apt-get install -y
     rm -rf /var/lib/apt/lists/*
 
 COPY ./requirements.txt /requirements.txt
+COPY ./sample-media/ /home/pipeline-server/vids
+COPY ./configs/dlstreamer/pipelines /home/pipeline-server/pipelines
+COPY ./configs/dlstreamer/extensions /home/pipeline-server/extensions
+COPY ./configs/dlstreamer/models/2022 /home/pipeline-server/models 
+COPY ./configs/dlstreamer/framework-pipelines /home/pipeline-server/framework-pipelines
+
+RUN   wget https://github.com/dlstreamer/pipeline-zoo-models/raw/main/storage/yolov5s-416_INT8/yolo-v5.json; mv yolo-v5.json /home/pipeline-server/models/yolov5s/1/yolov5s.json
+
+RUN   wget https://github.com/dlstreamer/pipeline-zoo-models/raw/main/storage/yolov5s-416_INT8/FP16-INT8/yolov5s.bin; mkdir /home/pipeline-server/models/yolov5s/1/FP32-INT8; mv yolov5s.bin /home/pipeline-server/models/yolov5s/1/FP32-INT8/yolov5s.bin
+
+RUN   wget https://github.com/dlstreamer/pipeline-zoo-models/raw/main/storage/yolov5s-416_INT8/FP16-INT8/yolov5s.xml; mv yolov5s.xml /home/pipeline-server/models/yolov5s/1/FP32-INT8/yolov5s.xml 
+
+RUN   wget https://github.com/dlstreamer/pipeline-zoo-models/raw/main/storage/efficientnet-b0_INT8/FP32-INT8/efficientnet-b0.bin;  mkdir -p /home/pipeline-server/models/efficientnet-b0/1/FP16-INT8; mv efficientnet-b0.bin /home/pipeline-server/models/efficientnet-b0/1/FP16-INT8/efficientnet-b0.bin
+
+RUN wget https://github.com/dlstreamer/pipeline-zoo-models/raw/main/storage/efficientnet-b0_INT8/FP32-INT8/efficientnet-b0.xml; mv efficientnet-b0.xml /home/pipeline-server/models/efficientnet-b0/1/FP16-INT8/efficientnet-b0.xml
+
+RUN  wget https://github.com/dlstreamer/pipeline-zoo-models/raw/main/storage/efficientnet-b0_INT8/efficientnet-b0.json; mv efficientnet-b0.json /home/pipeline-server/models/efficientnet-b0/1/efficientnet-b0.json
+
+
+
+
 RUN pip3 install --upgrade pip --no-cache-dir -r /requirements.txt
 WORKDIR /
